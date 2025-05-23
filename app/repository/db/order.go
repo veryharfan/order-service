@@ -151,6 +151,7 @@ func (r *orderRepository) GetExpiredOrders(ctx context.Context) ([]domain.Order,
 			&order.Status,
 			&order.CreatedAt,
 			&order.UpdatedAt,
+			&order.ExpiredAt,
 		)
 		if err != nil {
 			slog.ErrorContext(ctx, "[orderRepository] GetExpiredOrders", "scan error", err)
