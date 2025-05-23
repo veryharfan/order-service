@@ -22,6 +22,7 @@ type Order struct {
 	Status    OrderStatus `json:"status"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
+	ExpiredAt time.Time   `json:"expired_at"`
 }
 
 type OrderUpdateStatusRequest struct {
@@ -39,6 +40,7 @@ type OrderRepository interface {
 	GetOrderByID(ctx context.Context, id int64) (Order, error)
 	UpdateStatusOrder(ctx context.Context, id int64, status string, tx *sql.Tx) error
 	GetListByUserID(ctx context.Context, userID int64) ([]Order, error)
+	GetExpiredOrders(ctx context.Context) ([]Order, error)
 
 	WithTransaction(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx) error) error
 }
@@ -48,4 +50,5 @@ type OrderUsecase interface {
 	UpdateStatusOrder(ctx context.Context, req OrderUpdateStatusRequest) error
 	GetListByUserID(ctx context.Context, userID int64) ([]Order, error)
 	GetOrderByID(ctx context.Context, userID int64, id int64) (Order, error)
+	UpdateExpiredOrders(ctx context.Context)
 }

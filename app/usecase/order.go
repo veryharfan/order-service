@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"order-service/app/domain"
 	"order-service/config"
+	"time"
 )
 
 type orderUsecase struct {
@@ -28,6 +29,7 @@ func (u *orderUsecase) CreateOrder(ctx context.Context, userID int64, req domain
 		Quantity:  req.Quantity,
 		UserID:    userID,
 		Status:    domain.OrderStatusWaitingPayment,
+		ExpiredAt: time.Now().Add(time.Second * time.Duration(u.cfg.OrderExpiredDurationSeconds)),
 	}
 
 	err := u.orderRepository.WithTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
@@ -112,4 +114,37 @@ func (u *orderUsecase) UpdateStatusOrder(ctx context.Context, req domain.OrderUp
 
 	slog.InfoContext(ctx, "[orderUsecase] success UpdateStatusOrder", "order_id", req)
 	return nil
+}
+
+func (u *orderUsecase) UpdateExpiredOrders(ctx context.Context) {
+	slog.InfoContext(ctx, "[orderUsecase] UpdateExpiredOrders", "start", time.Now())
+	orders, err := u.orderRepository.GetExpiredOrders(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "[orderUsecase] UpdateExpiredOrders", "failed to get expired orders", err)
+		return
+	}
+
+	reservedStockReq := domain.ReservedStockUpdateRequest{
+		Status: "cancelled",
+	}
+
+	for _, order := range orders {
+
+		err = u.orderRepository.WithTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+			err := u.orderRepository.UpdateStatusOrder(ctx, order.ID, string(domain.OrderStatusCancelled), tx)
+			if err != nil {
+				slog.ErrorContext(ctx, "[orderUsecase] UpdateExpiredOrders", "failed to update order status", err)
+				return err
+			}
+			if err := u.stockRepository.UpdateReservedStockStatus(ctx, order.ID, reservedStockReq); err != nil {
+				slog.ErrorContext(ctx, "[orderUsecase] UpdateExpiredOrders", "failed to update reserved stock status", err)
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			slog.ErrorContext(ctx, "[orderUsecase] UpdateExpiredOrders", "transaction", err)
+		}
+	}
+	slog.InfoContext(ctx, "[orderUsecase] UpdateExpiredOrders", "end", time.Now())
 }

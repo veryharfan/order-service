@@ -2,6 +2,7 @@
 PORT=8080
 INTERNAL_AUTH_HEADER=your_internal_auth_header
 AUTH_PAYMENT_HEADER=your_auth_payment_header
+ORDER_EXPIRED_DURATION_SECONDS=300
 
 # Database Configuration
 DB_HOST=localhost

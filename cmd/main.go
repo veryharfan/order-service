@@ -14,7 +14,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -74,6 +76,16 @@ func main() {
 			return
 		}
 	}()
+
+	s := gocron.NewScheduler(time.UTC)
+
+	// Schedule a job every minute
+	s.Every(1).Minute().Do(func() {
+		orderUsecase.UpdateExpiredOrders(context.Background())
+	})
+
+	// Start the scheduler asynchronously
+	s.StartAsync()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)

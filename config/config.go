@@ -11,12 +11,13 @@ import (
 )
 
 type Config struct {
-	Port               string                 `mapstructure:"PORT" validate:"required"`
-	InternalAuthHeader string                 `mapstructure:"INTERNAL_AUTH_HEADER" validate:"required"`
-	AuthPaymentHeader  string                 `mapstructure:"AUTH_PAYMENT_HEADER" validate:"required"`
-	Db                 DbConfig               `mapstructure:",squash"`
-	WarehouseService   WarehouseServiceConfig `mapstructure:",squash"`
-	Jwt                JwtConfig              `mapstructure:",squash"`
+	Port                        string                 `mapstructure:"PORT" validate:"required"`
+	InternalAuthHeader          string                 `mapstructure:"INTERNAL_AUTH_HEADER" validate:"required"`
+	AuthPaymentHeader           string                 `mapstructure:"AUTH_PAYMENT_HEADER" validate:"required"`
+	OrderExpiredDurationSeconds int64                  `mapstructure:"ORDER_EXPIRED_DURATION_SECONDS" validate:"required"`
+	Db                          DbConfig               `mapstructure:",squash"`
+	WarehouseService            WarehouseServiceConfig `mapstructure:",squash"`
+	Jwt                         JwtConfig              `mapstructure:",squash"`
 }
 
 type DbConfig struct {
@@ -86,6 +87,7 @@ func InitConfig(ctx context.Context) (*Config, error) {
 		"DB_SSLMODE",
 		"JWT_SECRETKEY",
 		"JWT_EXPIRE",
+		"ORDER_EXPIRED_DURATION_SECONDS",
 	}
 
 	slog.InfoContext(ctx, "[InitConfig] Environment variables debug:")
